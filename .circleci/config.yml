@@ -38,7 +38,7 @@ commands:
                 npm install
                 npm run migration:revert
               fi
-
+            
 jobs:
   build-frontend:
     docker:
@@ -160,7 +160,7 @@ jobs:
             echo "insecure" >> ~/.curlrc
             cd backend
             npm install
-            #npm audit --audit-level=critical
+            # npm audit --audit-level=critical
             npm audit fix --audit-level=critical --force
       - slack/notify:
           event: fail
@@ -168,7 +168,6 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-scan
-
 
   deploy-infrastructure:
     docker:
@@ -203,8 +202,8 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             echo $(aws ec2 describe-instances \
-            --query 'Reservations[*].Instances[*].PublicDnsName' \
-            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:Name,Values=backend-03bc1d1" \
             --output text) >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
 
@@ -212,7 +211,7 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt   
-      - destroy-environment
+      - destroy-environment   
 
   configure-infrastructure:
     docker:
@@ -245,7 +244,9 @@ jobs:
             export ANSIBLE_PARAMIKO_BANNER_TIMEOUT=30
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml -v
-      # - destroy-environment    
+      - destroy-environment 
+
+      # Here's where you will add some code to rollback on failure      
 
   run-migrations:
     docker:
@@ -277,7 +278,8 @@ jobs:
               curl https://kvdb.io/$KVDB_BUCKET_ID/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
       - destroy-environment
-      - revert-migrations      
+      - revert-migrations   
+     # Here's where you will add some code to rollback on failure      
 
   deploy-frontend:
     docker:
@@ -305,7 +307,7 @@ jobs:
             --output text)
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
             echo "${API_URL}"
-            echo "${API_URL}" >> frontend/.env
+            echo API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
             cat frontend/.env
       - persist_to_workspace:
           root: ~/
@@ -388,10 +390,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --output text)
+            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicDnsName' --output text)
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
             echo "${API_URL}"
             curl -s ${API_URL}/api/status -v 
@@ -480,8 +479,7 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
             else
               echo 'FAILED'
-            fi
-
+            fi     
 
 workflows:
   default:
@@ -511,7 +509,7 @@ workflows:
           requires: [run-migrations]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
