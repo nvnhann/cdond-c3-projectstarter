@@ -224,7 +224,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["28:3f:46:87:27:b9:97:cc:07:f6:98:ac:80:19:da:3f"]
+          fingerprints: ["6c:c7:ec:46:18:d9:eb:32:9f:75:ae:43:cb:76:37:d7"]
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -241,7 +241,7 @@ jobs:
             cat ./.circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=False
             export RECORD_HOST_KEYS=False
-            export ANSIBLE_PARAMIKO_BANNER_TIMEOUT=30
+            export ANSIBLE_PARAMIKO_BANNER_TIMEOUT=60
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml -v
       # - destroy-environment 
@@ -330,7 +330,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["28:3f:46:87:27:b9:97:cc:07:f6:98:ac:80:19:da:3f"]
+          fingerprints: ["6c:c7:ec:46:18:d9:eb:32:9f:75:ae:43:cb:76:37:d7"]
       - run:
           name: Install dependencies
           command: |
