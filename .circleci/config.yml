@@ -203,7 +203,7 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             echo $(aws ec2 describe-instances \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --query 'Reservations[*].Instances[*].PublicDnsName' \
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --output text) >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
@@ -361,8 +361,8 @@ jobs:
             echo "Contents of the inventory.txt file is ----"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml  
-      # - revert-migrations
-      # - destroy-environment 
+      - revert-migrations
+      - destroy-environment 
 
   smoke-test:
     docker:
