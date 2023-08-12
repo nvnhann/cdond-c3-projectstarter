@@ -364,7 +364,7 @@ jobs:
       - revert-migrations
       - destroy-environment 
 
-smoke-test:
+  smoke-test:
     docker:
       # Lightweight Docker image
       - image: python:3.7-alpine3.11
