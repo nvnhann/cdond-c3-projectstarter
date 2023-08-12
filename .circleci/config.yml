@@ -108,26 +108,60 @@ jobs:
           command: |
             cd backend
             npm install
-            npm run test
+          npm run test
       - save_cache:
           paths: [backend/node_modules]
           key: backend-test
             
-#   scan-frontend:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       # Restore from cache
-#       # Your job code here
+  scan-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: Front scan
+          command: |
+            cd frontend
+            npm install
+            # npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-scan
 
-#   scan-backend:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       # Restore from cache
-#       # Your job code here
+  scan-backend:
+    docker:
+      - image: circleci/node:13.8.0
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Backend scan
+          command: |
+            echo "insecure" >> ~/.curlrc
+            cd backend
+            npm install
+            npm audit --audit-level=critical
+            # npm audit fix --audit-level=critical --force
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-scan
+
 
 #   deploy-infrastructure:
 #     docker:
