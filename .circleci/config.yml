@@ -33,9 +33,14 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET_ID}/migration_<<parameters.workflow_id>>)
+            if (( $SUCCESS == 1 ));
+            then
+              ls
               cd backend
               npm install
               npm run migration:revert
+            fi
 
 jobs:
   build-frontend:
@@ -379,7 +384,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add --no-cache \
-              curl \
+              tar gzip curl nodejs npm \
               python3 \
               py3-pip \
               && pip3 install --upgrade pip \
