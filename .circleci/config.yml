@@ -302,7 +302,7 @@ jobs:
           command: |
             # your code here
             export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --query 'Reservations[*].Instances[*].PublicDnsName' \
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --output text)
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
@@ -356,7 +356,7 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
             echo "=== .env ===="
             cat backend/.env
             tar -C backend -czvf artifact.tar.gz .
