@@ -35,7 +35,7 @@ commands:
           command: |
             SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET_ID}/migration_<<parameters.workflow_id>>)
             if [ "${SUCCESS}" -eq 1 ]; then
-              cd ~/project/backend
+              cd backend
               npm install
               npm run migration:revert
             fi
@@ -414,6 +414,7 @@ jobs:
               exit 1
             fi
       - revert-migrations
+      - destroy-environment 
 
   cloudfront-update:
     docker:
